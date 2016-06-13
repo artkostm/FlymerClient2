@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
@@ -43,6 +44,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import eightbitlab.com.blurview.BlurView;
+import eightbitlab.com.blurview.RenderScriptBlur;
+
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
@@ -72,16 +76,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private BlurView blurView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
+        blurView = (BlurView) findViewById(R.id.blurView);
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
+
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -104,12 +111,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getPairs();
-            }
-        }).start();
+
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                getPairs();
+//            }
+//        }).start();
+
+        final float radius = 16;
+        final View decorView = getWindow().getDecorView();
+        final View rootView = decorView.findViewById(android.R.id.content);
+        final Drawable windowBackground = decorView.getBackground();
+
+        blurView.setupWith(rootView).windowBackground(windowBackground)
+                .blurAlgorithm(new RenderScriptBlur(this, true))
+        .blurRadius(radius);
     }
 
     Handler handler = new Handler() {
