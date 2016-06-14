@@ -3,6 +3,10 @@ package com.artkostm.flymer.flymerclient2;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -35,6 +39,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.artkostm.flymer.flymerclient2.login.LoginValuesAlgorithm;
+import com.artkostm.flymer.flymerclient2.service.PipelineAlarmReceiver;
+import com.artkostm.flymer.flymerclient2.service.PipelineService;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -127,6 +133,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         blurView.setupWith(rootView).windowBackground(windowBackground)
                 .blurAlgorithm(new RenderScriptBlur(this, true))
         .blurRadius(radius);
+
+        scheduleAlarm();
     }
 
     Handler handler = new Handler() {
@@ -172,6 +180,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } finally {
 
         }
+    }
+
+    private void scheduleAlarm() {
+        final Intent intent = new Intent(getApplicationContext(), PipelineService.class);
+        final PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        startService(intent);
+        final AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 15 * 1000, 1000 * 15, pendingIntent);
     }
 
     private void populateAutoComplete() {
