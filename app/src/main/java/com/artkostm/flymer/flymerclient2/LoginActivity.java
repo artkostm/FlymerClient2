@@ -41,6 +41,11 @@ import android.widget.Toast;
 import com.artkostm.flymer.flymerclient2.login.LoginValuesAlgorithm;
 import com.artkostm.flymer.flymerclient2.service.PipelineAlarmReceiver;
 import com.artkostm.flymer.flymerclient2.service.PipelineService;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.gcm.GcmNetworkManager;
+import com.google.android.gms.gcm.PeriodicTask;
+import com.google.android.gms.gcm.Task;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -83,6 +88,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
     private BlurView blurView;
+    private GcmNetworkManager manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,11 +189,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void scheduleAlarm() {
-        final Intent intent = new Intent(getApplicationContext(), PipelineService.class);
-        final PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        startService(intent);
-        final AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        manager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, 15 * 1000, 1000 * 15, pendingIntent);
+        manager = GcmNetworkManager.getInstance(this);
+        final Task task = new PeriodicTask.Builder()
+                .setService(PipelineService.class)
+                .setPeriod(30)
+                .setFlex(10)
+                .setTag("flymer_periodic")
+                .setPersisted(true)
+                .build();
+
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (resultCode == ConnectionResult.SUCCESS) {
+            Toast.makeText(this, "success", Toast.LENGTH_LONG).show();
+            manager.schedule(task);
+        } else {
+            Toast.makeText(this, "cant run services", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void populateAutoComplete() {
